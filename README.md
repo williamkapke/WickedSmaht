@@ -1,1 +1,1 @@
-# WST-5on1
+# Indicators for Wicked Smaht Trading
