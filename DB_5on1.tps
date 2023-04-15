@@ -21,21 +21,6 @@ var doubleTopBottomCloseLineWidth = input.int(2, minval = 1, maxval = 5, title =
 var doubleTopBottomCloseLineOption = input.string("Solid", options = ["Solid", "Dotted"], title = "Style", group = "Double Top/Bottom Close Line")
 var doubleTopBottomCloseLineStyle = (doubleTopBottomCloseLineOption == "Solid") ? line.style_solid : (doubleTopBottomCloseLineOption == "Dotted") ? line.style_dotted : na
 
-//var sma1color = input.color(#FFFF0066, '', group = "5min SMA 1", inline = "SMA 1")
-//var sma1style = input.string('dashed', '', ['dashed', 'solid'], group = "5min SMA 1", inline = "SMA 1")
-//var sma1length = input(9, 'Length', group = "5min SMA 1", inline = "SMA 1")
-//sma1src = input(close, 'Source', group = "5min SMA 1", inline = "SMA 1")
-
-//var sma2color = input.color(#0000FFAA, '', group = "5min SMA 2", inline = "SMA 2")
-//var sma2style = input.string('dashed', '', ['dashed', 'solid'], group = "5min SMA 2", inline = "SMA 2")
-//var sma2length = input(20, 'Length', group = "5min SMA 2", inline = "SMA 2")
-//sma2src = input(close, 'Source', group = "5min SMA 2", inline = "SMA 2")
-
-//var sma3color = input.color(#00FFFF99, '', group = "5min SMA 3", inline = "SMA 3")
-//var sma3style = input.string('dashed', '', ['dashed', 'solid'], group = "5min SMA 3", inline = "SMA 3")
-//var sma3length = input(200, 'Length', group = "5min SMA 3", inline = "SMA 3")
-//sma3src = input(close, 'Source', group = "5min SMA 3", inline = "SMA 3")
-
 var sessionBarCount = 0
 if ta.change(session.ismarket)
     sessionBarCount := 0
@@ -88,14 +73,6 @@ if isOneMin and session.ismarket //and sessionBarCount < 100
 
     candle5Min.set_rightbottom(bar_index + (4 - currentCandleWithin5MinBar), close)
     candle5Min.set_bgcolor(bgcolor)
-
-//c1 = sma1style == 'solid' or bar_index % 2 == 0 ? sma1color : #00000000
-//c2 = sma2style == 'solid' or bar_index % 2 == 0 ? sma2color : #00000000
-//c3 = sma1style == 'solid' or bar_index % 2 == 0 ? sma3color : #00000000
-
-//plot(isOneMin ? ta.sma(sma1src, sma1length*5) : na, "SMA 1", c1)
-//plot(isOneMin ? ta.sma(sma2src, sma2length*5) : na, "SMA 1", c2)
-//plot(isOneMin ? ta.sma(sma3src, sma3length*5) : na, "SMA 1", c3)
 
 FirstMATF = input.timeframe("5", title = "MA1 Timeframe", group = "Moving Average 1")
 FirstMASource = input(close, title = "MA1 Source", group = "Moving Average 1")
