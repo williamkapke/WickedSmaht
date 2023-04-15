@@ -4,7 +4,7 @@
 // Changelog:
 // vhawkx - added customizable colors and lines 2023-03-25
 // MarketKap - added SMAs 2023-04-06
-// vhawkx - added other MA options 2023-04-14
+// vhawkx - added EMA and VWAP options 2023-04-15
 
 //@version=5
 
@@ -20,6 +20,43 @@ var doubleTopBottomCloseColor = input.color(color.new(color.yellow, 30), title =
 var doubleTopBottomCloseLineWidth = input.int(2, minval = 1, maxval = 5, title = "Width", group = "Double Top/Bottom Close Line")
 var doubleTopBottomCloseLineOption = input.string("Solid", options = ["Solid", "Dotted"], title = "Style", group = "Double Top/Bottom Close Line")
 var doubleTopBottomCloseLineStyle = (doubleTopBottomCloseLineOption == "Solid") ? line.style_solid : (doubleTopBottomCloseLineOption == "Dotted") ? line.style_dotted : na
+
+var ma1color = input.color(#FFFF0066, 'Color', group = "5 min MA 1")
+var ma1style = input.string('Dashed', 'Style', ['Dashed', 'Solid'], group = "5 min MA 1")
+var ma1length = input(9, 'Length', group = "5 min MA 1")
+ma1src = input(close, 'Source', group = "5 min MA 1")
+string ma1type = input.string(defval = "SMA", options = ["SMA", "EMA"], title = "Type", group = "5 min MA 1")
+float ma1 = switch ma1type
+    "SMA" => ta.sma(ma1src, ma1length * 5)
+    "EMA" => ta.ema(ma1src, ma1length * 5)
+
+var ma2color = input.color(#0000FFAA, 'Color', group = "5 min MA 2")
+var ma2style = input.string('Dashed', 'Style', ['Dashed', 'Solid'], group = "5 min MA 2")
+var ma2length = input(20, 'Length', group = "5 min MA 2")
+ma2src = input(close, 'Source', group = "5 min MA 2")
+string ma2type = input.string(defval = "SMA", options = ["SMA", "EMA"], title = "Type", group = "5 min MA 2")
+float ma2 = switch ma2type
+    "SMA" => ta.sma(ma2src, ma2length * 5)
+    "EMA" => ta.ema(ma2src, ma2length * 5)
+
+var ma3color = input.color(#00FFFF99, 'Color', group = "5min MA 3")
+var ma3style = input.string('Dashed', 'Style', ['Dashed', 'Solid'], group = "5min MA 3")
+var ma3length = input(200, 'Length', group = "5min MA 3")
+ma3src = input(close, 'Source', group = "5min MA 3")
+string ma3type = input.string(defval = "SMA", options = ["SMA", "EMA"], title = "Type", group = "5min MA 3")
+float ma3 = switch ma3type
+    "SMA" => ta.sma(ma3src, ma3length * 5)
+    "EMA" => ta.ema(ma3src, ma3length * 5)
+
+var ma4color = input.color(#E040FB, 'Color', group = "5m MA 4 or VWAP")
+var ma4style = input.string('Solid', 'Style', ['Dashed', 'Solid'], group = "5m MA 4 or VWAP")
+var ma4length = input(250, 'Length', group = "5m MA 4 or VWAP")
+ma4src = input(hlc3, 'Source', group = "5m MA 4 or VWAP")
+string ma4type = input.string(defval = "VWAP", options = ["SMA", "EMA", "VWAP"], title = "Type", group = "5m MA 4 or VWAP")
+float ma4 = switch ma4type
+    "SMA" => ta.sma(ma4src, ma4length * 5)
+    "EMA" => ta.ema(ma4src, ma4length * 5)
+    "VWAP" => ta.vwap(ma4src)
 
 var sessionBarCount = 0
 if ta.change(session.ismarket)
@@ -74,53 +111,12 @@ if isOneMin and session.ismarket //and sessionBarCount < 100
     candle5Min.set_rightbottom(bar_index + (4 - currentCandleWithin5MinBar), close)
     candle5Min.set_bgcolor(bgcolor)
 
-FirstMATF = input.timeframe("5", title = "MA1 Timeframe", group = "Moving Average 1")
-FirstMASource = input(close, title = "MA1 Source", group = "Moving Average 1")
-FirstMALength = input.int(9, title = "MA1 Length", group = "Moving Average 1")
-string FirstMAType = input.string(defval = "SMA", options = ["SMA", "EMA", "WMA", "HMA", "RMA", "VWMA"], title = "MA1 Type", group = "Moving Average 1")
-float FirstMA = switch FirstMAType
-    "SMA" => ta.sma(FirstMASource, FirstMALength)
-    "EMA" => ta.ema(FirstMASource, FirstMALength)
-    "WMA" => ta.wma(FirstMASource, FirstMALength)
-    "HMA" => ta.hma(FirstMASource, FirstMALength)
-    "RMA" => ta.rma(FirstMASource, FirstMALength)
-    "VWMA" => ta.vwma(FirstMASource, FirstMALength)
-SecondMATF = input.timeframe("5", title = "MA2 Timeframe", group = "Moving Average 2")
-SecondMASource = input(close, title = "MA2 Source", group = "Moving Average 2")
-SecondMALength = input.int(20, title = "MA2 Length", group = "Moving Average 2")
-string SecondMAType = input.string(defval = "SMA", options = ["SMA", "EMA", "WMA", "HMA", "RMA", "VWMA"], title = "MA2 Type", group = "Moving Average 2")
-float SecondMA = switch SecondMAType
-    "SMA" => ta.sma(SecondMASource, SecondMALength)
-    "EMA" => ta.ema(SecondMASource, SecondMALength)
-    "WMA" => ta.wma(SecondMASource, SecondMALength)
-    "HMA" => ta.hma(SecondMASource, SecondMALength)
-    "RMA" => ta.rma(SecondMASource, SecondMALength)
-    "VWMA" => ta.vwma(SecondMASource, SecondMALength)
-ThirdMATF = input.timeframe("5", title = "MA3 Timeframe", group = "Moving Average 3")
-ThirdMASource = input(close, title = "MA3 Source", group = "Moving Average 3")
-ThirdMALength = input.int(200, title = "MA3 Length", group = "Moving Average 3")
-string ThirdMAType = input.string(defval = "SMA", options = ["SMA", "EMA", "WMA", "HMA", "RMA", "VWMA"], title = "MA3 Type", group = "Moving Average 3")
-float ThirdMA = switch ThirdMAType
-    "SMA" => ta.sma(ThirdMASource, ThirdMALength)
-    "EMA" => ta.ema(ThirdMASource, ThirdMALength)
-    "WMA" => ta.wma(ThirdMASource, ThirdMALength)
-    "HMA" => ta.hma(ThirdMASource, ThirdMALength)
-    "RMA" => ta.rma(ThirdMASource, ThirdMALength)
-    "VWMA" => ta.vwma(ThirdMASource, ThirdMALength)
-FourthMATF = input.timeframe("", title = "MA4 Timeframe", group = "Moving Average 4 or VWAP")
-FourthMASource = input(hlc3, title = "MA4 Source", group = "Moving Average 4 or VWAP")
-FourthMALength = input.int(250, title = "MA4 Length", group = "Moving Average 4 or VWAP")
-string FourthMAType = input.string(defval = "VWAP", options = ["SMA", "EMA", "WMA", "HMA", "RMA", "VWMA", "SWMA", "VWAP"], title = "MA4 Type or VWAP", group = "Moving Average 4 or VWAP")
-float FourthMA = switch FourthMAType
-    "SMA" => ta.sma(FourthMASource, FourthMALength)
-    "EMA" => ta.ema(FourthMASource, FourthMALength)
-    "WMA" => ta.wma(FourthMASource, FourthMALength)
-    "HMA" => ta.hma(FourthMASource, FourthMALength)
-    "RMA" => ta.rma(FourthMASource, FourthMALength)
-    "VWMA" => ta.vwma(FourthMASource, FourthMALength)
-    "SWMA" => ta.swma(FourthMASource)
-    "VWAP" => ta.vwap(FourthMASource)
-plot(request.security(syminfo.tickerid, FirstMATF, FirstMA), color = color.new(color.aqua, 0), linewidth = 1, title = "Show MA1")
-plot(request.security(syminfo.tickerid, SecondMATF, SecondMA), color = color.new(color.maroon, 0), linewidth = 1, title = "Show MA2")
-plot(request.security(syminfo.tickerid, ThirdMATF, ThirdMA), color = color.new(color.orange, 0), linewidth = 1, title = "Show MA3")
-plot(request.security(syminfo.tickerid, FourthMATF, FourthMA), color = color.new(color.fuchsia, 0), linewidth = 1, title = "Show MA4 or VWAP")
+c1 = ma1style == 'Solid' or bar_index % 2 == 0 ? ma1color : #00000000
+c2 = ma2style == 'Solid' or bar_index % 2 == 0 ? ma2color : #00000000
+c3 = ma3style == 'Solid' or bar_index % 2 == 0 ? ma3color : #00000000
+c4 = ma4style == 'Solid' or bar_index % 2 == 0 ? ma4color : #00000000
+
+plot(isOneMin ? ma1 : na, "MA 1", c1)
+plot(isOneMin ? ma2 : na, "MA 2", c2)
+plot(isOneMin ? ma3 : na, "MA 3", c3)
+plot(isOneMin ? ma4 : na, "MA 4 or VWAP", c4)
