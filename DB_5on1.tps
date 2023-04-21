@@ -4,7 +4,7 @@
 // Changelog:
 // vhawkx - added customizable colors and lines 2023-03-25
 // MarketKap - added SMAs 2023-04-06
-// vhawkx - added EMA and VWAP options 2023-04-15
+// vhawkx - added EMA and VWAP options and 1m and 5m timeframes for MAs 2023-04-15
 
 //@version=5
 
@@ -21,41 +21,45 @@ var doubleTopBottomCloseLineWidth = input.int(2, minval = 1, maxval = 5, title =
 var doubleTopBottomCloseLineOption = input.string("Solid", options = ["Solid", "Dotted"], title = "Style", group = "Double Top/Bottom Close Line")
 var doubleTopBottomCloseLineStyle = (doubleTopBottomCloseLineOption == "Solid") ? line.style_solid : (doubleTopBottomCloseLineOption == "Dotted") ? line.style_dotted : na
 
-var ma1color = input.color(#FFFF0066, 'Color', group = "5 min MA 1")
-var ma1style = input.string('Dashed', 'Style', ['Dashed', 'Solid'], group = "5 min MA 1")
-var ma1length = input(9, 'Length', group = "5 min MA 1")
-ma1src = input(close, 'Source', group = "5 min MA 1")
-string ma1type = input.string(defval = "SMA", options = ["SMA", "EMA"], title = "Type", group = "5 min MA 1")
+var ma1color = input.color(#FFFF0066, 'Color', group = "MA 1")
+var ma1style = input.string('Dashed', 'Style', ['Dashed', 'Solid'], group = "MA 1")
+var ma1time = input.int(5, 'Timeframe', [1, 5], tooltip = "Choose between 1m or 5m timeframes.", group = "MA 1")
+var ma1length = input(9, 'Length', group = "MA 1")
+ma1src = input(close, 'Source', group = "MA 1")
+string ma1type = input.string(defval = "SMA", options = ["SMA", "EMA"], title = "Type", group = "MA 1")
 float ma1 = switch ma1type
-    "SMA" => ta.sma(ma1src, ma1length * 5)
-    "EMA" => ta.ema(ma1src, ma1length * 5)
+    "SMA" => ta.sma(ma1src, ma1length * ma1time)
+    "EMA" => ta.ema(ma1src, ma1length * ma1time)
 
-var ma2color = input.color(#0000FFAA, 'Color', group = "5 min MA 2")
-var ma2style = input.string('Dashed', 'Style', ['Dashed', 'Solid'], group = "5 min MA 2")
-var ma2length = input(20, 'Length', group = "5 min MA 2")
-ma2src = input(close, 'Source', group = "5 min MA 2")
-string ma2type = input.string(defval = "SMA", options = ["SMA", "EMA"], title = "Type", group = "5 min MA 2")
+var ma2color = input.color(#0000FFAA, 'Color', group = "MA 2")
+var ma2style = input.string('Dashed', 'Style', ['Dashed', 'Solid'], group = "MA 2")
+var ma2time = input.int(5, 'Timeframe', [1, 5], tooltip = "Choose between 1m or 5m timeframes.", group = "MA 2")
+var ma2length = input(20, 'Length', group = "MA 2")
+ma2src = input(close, 'Source', group = "MA 2")
+string ma2type = input.string(defval = "SMA", options = ["SMA", "EMA"], title = "Type", group = "MA 2")
 float ma2 = switch ma2type
-    "SMA" => ta.sma(ma2src, ma2length * 5)
-    "EMA" => ta.ema(ma2src, ma2length * 5)
+    "SMA" => ta.sma(ma2src, ma2length * ma2time)
+    "EMA" => ta.ema(ma2src, ma2length * ma2time)
 
-var ma3color = input.color(#00FFFF99, 'Color', group = "5min MA 3")
-var ma3style = input.string('Dashed', 'Style', ['Dashed', 'Solid'], group = "5min MA 3")
-var ma3length = input(200, 'Length', group = "5min MA 3")
-ma3src = input(close, 'Source', group = "5min MA 3")
-string ma3type = input.string(defval = "SMA", options = ["SMA", "EMA"], title = "Type", group = "5min MA 3")
+var ma3color = input.color(#00FFFF99, 'Color', group = "MA 3")
+var ma3style = input.string('Dashed', 'Style', ['Dashed', 'Solid'], group = "MA 3")
+var ma3time = input.int(5, 'Timeframe', [1, 5], tooltip = "Choose between 1m or 5m timeframes.", group = "MA 3")
+var ma3length = input(200, 'Length', group = "MA 3")
+ma3src = input(close, 'Source', group = "MA 3")
+string ma3type = input.string(defval = "SMA", options = ["SMA", "EMA"], title = "Type", group = "MA 3")
 float ma3 = switch ma3type
-    "SMA" => ta.sma(ma3src, ma3length * 5)
-    "EMA" => ta.ema(ma3src, ma3length * 5)
+    "SMA" => ta.sma(ma3src, ma3length * ma3time)
+    "EMA" => ta.ema(ma3src, ma3length * ma3time)
 
-var ma4color = input.color(#E040FB, 'Color', group = "5m MA 4 or VWAP")
-var ma4style = input.string('Solid', 'Style', ['Dashed', 'Solid'], group = "5m MA 4 or VWAP")
-var ma4length = input(250, 'Length', group = "5m MA 4 or VWAP")
-ma4src = input(hlc3, 'Source', group = "5m MA 4 or VWAP")
-string ma4type = input.string(defval = "VWAP", options = ["SMA", "EMA", "VWAP"], title = "Type", group = "5m MA 4 or VWAP")
+var ma4color = input.color(#E040FB, 'Color', group = "MA 4 or VWAP")
+var ma4style = input.string('Solid', 'Style', ['Dashed', 'Solid'], group = "MA 4 or VWAP")
+var ma4time = input.int(5, 'Timeframe', [1, 5], tooltip = "Choose between 1m or 5m timeframes.", group = "MA 4 or VWAP")
+var ma4length = input(250, 'Length', group = "MA 4 or VWAP")
+ma4src = input(hlc3, 'Source', group = "MA 4 or VWAP")
+string ma4type = input.string(defval = "VWAP", options = ["SMA", "EMA", "VWAP"], title = "Type", group = "MA 4 or VWAP")
 float ma4 = switch ma4type
-    "SMA" => ta.sma(ma4src, ma4length * 5)
-    "EMA" => ta.ema(ma4src, ma4length * 5)
+    "SMA" => ta.sma(ma4src, ma4length * ma4time)
+    "EMA" => ta.ema(ma4src, ma4length * ma4time)
     "VWAP" => ta.vwap(ma4src)
 
 var sessionBarCount = 0
