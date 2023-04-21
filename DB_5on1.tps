@@ -2,125 +2,109 @@
 // Â© MarketKap
 
 // Changelog:
-// vhawkx - added customizable colors and lines 2023-03-25
-// MarketKap - added SMAs 2023-04-06
-// vhawkx - added EMA and VWAP options and 1m and 5m timeframes for MAs 2023-04-15
+// 2023-03-25 vhawkx - added customizable colors and lines
+// 2023-04-06 MarketKap - added SMAs
+// 2023-04-15 vhawkx - added EMA and VWAP options and 1m and 5m timeframes for MAs
+// 2023-04-21 MarketKap - Switched to High Time Frame Candles and DRYed up the code
 
 //@version=5
 
 indicator("WST DB 5-on-1", overlay = true, max_boxes_count = 156, max_lines_count = 195)
+import MarketKap/HTFCandlesLib/3 as big_candles
 
-var down5MinColor = input.color(#DE5E5788, title = "5m Candle Down Color")
-var up5MinColor = input.color(#52A49A88, title = "5m Candle Up Color")
-var doubleTopBottomLineColor = input.color(color.new(color.white, 30), title = "Color", group = "Double Top/Bottom Line")
-var doubleTopBottomLineWidth = input.int(3, minval = 1, maxval = 5, title = "Width", group = "Double Top/Bottom Line")
-var doubleTopBottomLineOption = input.string("Solid", options = ["Solid", "Dotted"], title = "Style", group = "Double Top/Bottom Line")
-var doubleTopBottomLineStyle = (doubleTopBottomLineOption == "Solid") ? line.style_solid : (doubleTopBottomLineOption == "Dotted") ? line.style_dotted : na
-var doubleTopBottomCloseColor = input.color(color.new(color.yellow, 30), title = "Color", group = "Double Top/Bottom Close Line")
-var doubleTopBottomCloseLineWidth = input.int(2, minval = 1, maxval = 5, title = "Width", group = "Double Top/Bottom Close Line")
-var doubleTopBottomCloseLineOption = input.string("Solid", options = ["Solid", "Dotted"], title = "Style", group = "Double Top/Bottom Close Line")
-var doubleTopBottomCloseLineStyle = (doubleTopBottomCloseLineOption == "Solid") ? line.style_solid : (doubleTopBottomCloseLineOption == "Dotted") ? line.style_dotted : na
+get_line_style(style) =>
+    switch style
+        "Dashed" => line.style_dashed
+        "Dotted" => line.style_dotted
+        => line.style_solid
 
-var ma1color = input.color(#FFFF0066, 'Color', group = "MA 1")
-var ma1style = input.string('Dashed', 'Style', ['Dashed', 'Solid'], group = "MA 1")
-var ma1time = input.int(5, 'Timeframe', [1, 5], tooltip = "Choose between 1m or 5m timeframes.", group = "MA 1")
-var ma1length = input(9, 'Length', group = "MA 1")
-ma1src = input(close, 'Source', group = "MA 1")
-string ma1type = input.string(defval = "SMA", options = ["SMA", "EMA"], title = "Type", group = "MA 1")
-float ma1 = switch ma1type
-    "SMA" => ta.sma(ma1src, ma1length * ma1time)
-    "EMA" => ta.ema(ma1src, ma1length * ma1time)
+// float ma1 = get_ma(ma1time, ma1length, ma1type, ma1src)
+get_ma(ma_time, ma_length, ma_type, ma_src) =>
+    switch ma_type
+        "SMA" => ta.sma(ma_src, ma_length * ma_time)
+        "EMA" => ta.ema(ma_src, ma_length * ma_time)
+        "VWAP" => ta.vwap(ma_src)
 
-var ma2color = input.color(#0000FFAA, 'Color', group = "MA 2")
-var ma2style = input.string('Dashed', 'Style', ['Dashed', 'Solid'], group = "MA 2")
-var ma2time = input.int(5, 'Timeframe', [1, 5], tooltip = "Choose between 1m or 5m timeframes.", group = "MA 2")
-var ma2length = input(20, 'Length', group = "MA 2")
-ma2src = input(close, 'Source', group = "MA 2")
-string ma2type = input.string(defval = "SMA", options = ["SMA", "EMA"], title = "Type", group = "MA 2")
-float ma2 = switch ma2type
-    "SMA" => ta.sma(ma2src, ma2length * ma2time)
-    "EMA" => ta.ema(ma2src, ma2length * ma2time)
+//#region Higher Timeframe Candles
+var tf_1a = input.timeframe('1', 'IF ON', inline = 'tf1')
+var tf_1b = input.timeframe('5', 'CHART, USE', inline = 'tf1')
+var down_color = input.color(#DE5E5788, title = "Candle Down Color")
+var up_color = input.color(#52A49A88, title = "Candle Up Color")
 
-var ma3color = input.color(#00FFFF99, 'Color', group = "MA 3")
-var ma3style = input.string('Dashed', 'Style', ['Dashed', 'Solid'], group = "MA 3")
-var ma3time = input.int(5, 'Timeframe', [1, 5], tooltip = "Choose between 1m or 5m timeframes.", group = "MA 3")
-var ma3length = input(200, 'Length', group = "MA 3")
-ma3src = input(close, 'Source', group = "MA 3")
-string ma3type = input.string(defval = "SMA", options = ["SMA", "EMA"], title = "Type", group = "MA 3")
-float ma3 = switch ma3type
-    "SMA" => ta.sma(ma3src, ma3length * ma3time)
-    "EMA" => ta.ema(ma3src, ma3length * ma3time)
+var doubles_line_color = input.color(color.new(color.white, 30), title = "", group = "Double Top/Bottom Line", inline = "doubles")
+var doubles_line_width = input.int(3, minval = 1, maxval = 5, title = "", group = "Double Top/Bottom Line", inline = "doubles")
+var doubles_line_style = get_line_style(input.string("Solid", options = ["Solid", "Dotted", "Dashed"], title = "", group = "Double Top/Bottom Line", inline = "doubles"))
+var doubles_offset = input.int(0, 'Offset', 0, 10, group = 'Double Top/Bottom Line', inline = "doubles")
 
-var ma4color = input.color(#E040FB, 'Color', group = "MA 4 or VWAP")
-var ma4style = input.string('Solid', 'Style', ['Dashed', 'Solid'], group = "MA 4 or VWAP")
-var ma4time = input.int(5, 'Timeframe', [1, 5], tooltip = "Choose between 1m or 5m timeframes.", group = "MA 4 or VWAP")
-var ma4length = input(250, 'Length', group = "MA 4 or VWAP")
-ma4src = input(hlc3, 'Source', group = "MA 4 or VWAP")
-string ma4type = input.string(defval = "VWAP", options = ["SMA", "EMA", "VWAP"], title = "Type", group = "MA 4 or VWAP")
-float ma4 = switch ma4type
-    "SMA" => ta.sma(ma4src, ma4length * ma4time)
-    "EMA" => ta.ema(ma4src, ma4length * ma4time)
-    "VWAP" => ta.vwap(ma4src)
+var db_line_color = input.color(color.new(color.yellow, 30), title = "", group = "Double Barrel Conservative Entry Line", inline = "db")
+var db_line_width = input.int(2, minval = 1, maxval = 5, title = "", group = "Double Barrel Conservative Entry Line", inline = "db")
+var db_line_style = get_line_style(input.string("Solid", options = ["Solid", "Dotted", "Dashed"], title = "", group = "Double Barrel Conservative Entry Line", inline = "db"))
 
-var sessionBarCount = 0
-if ta.change(session.ismarket)
-    sessionBarCount := 0
 
-getColor(i) =>
-    close[i] >= open[i] ? 'green' : 'red'
+var tf = timeframe.period == tf_1a ? tf_1b : '1s' //use 1s to disable it
+var htf = big_candles.create(tf, down_color, up_color, doubles_line_color, doubles_line_width, doubles_offset)
+htf.update()
+htf.doubles_line.set_style(doubles_line_style)
+//#endregion
 
-isOppositeColor() =>
-    last5min = close[5] >= open[9] ? 'green' : 'red'
-    this5min = close >= open[4] ? 'green' : 'red'
-    last5min != this5min
 
-var box candle5Min = na
-var line doubleBottomLine = na
-var isNew5MinCandle = false
-var wasDoubleBarrel = false
+//#region Conservative Entry Line
+var chart_tf_seconds = timeframe.in_seconds(timeframe.period)
+var was_double = false
+var is_double = false
+if ta.change(htf.current.start_time)
+    was_double := is_double
+    if was_double
+        number_of_candles_in_group = math.min(500, htf.timeframe_seconds / chart_tf_seconds) // tv only allows to draw 500 bars in the future
+        start = htf.previous.start + int(number_of_candles_in_group/2)
+        line.new(start, close[1], bar_index + number_of_candles_in_group - 1, close[1], color = db_line_color, width = db_line_width, style = db_line_style)
+is_double := htf.current.color != htf.previous.color
+//#endregion
+
+
+//#region SMAs
+float ma1 = get_ma(
+     input.int(5, 'Timeframe', [1, 5], tooltip = "Choose between 1m or 5m timeframes.", group = "Moving Average 1"),
+     input(9, 'Type', group = "Moving Average 1", inline = "MA Type"),
+     input.string(defval = "SMA", options = ["SMA", "EMA"], title = "", group = "Moving Average 1", inline = "MA Type"),
+     input(close, '', group = "Moving Average 1", inline = "MA Type")
+ )
+var ma1color = input.color(#FFFF0066, 'Style', group = "Moving Average 1", inline = "MA Style")
+var ma1style = input.string('Dashed', '', ['Dashed', 'Solid'], group = "Moving Average 1", inline = "MA Style")
+
+float ma2 = get_ma(
+     input.int(5, 'Timeframe', [1, 5], tooltip = "Choose between 1m or 5m timeframes.", group = "Moving Average 2"),
+     input(20, 'Type', group = "Moving Average 2", inline = "MA Type"),
+     input.string(defval = "SMA", options = ["SMA", "EMA"], title = "", group = "Moving Average 2", inline = "MA Type"),
+     input(close, '', group = "Moving Average 2", inline = "MA Type")
+ )
+var ma2color = input.color(#0000FFAA, 'Style', group = "Moving Average 2", inline = "MA Style")
+var ma2style = input.string('Dashed', '', ['Dashed', 'Solid'], group = "Moving Average 2", inline = "MA Style")
+
+float ma3 = get_ma(
+     input.int(5, 'Timeframe', [1, 5], tooltip = "Choose between 1m or 5m timeframes.", group = "Moving Average 3"),
+     input(200, 'Type', group = "Moving Average 3", inline = "MA Type"),
+     input.string(defval = "SMA", options = ["SMA", "EMA"], title = "", group = "Moving Average 3", inline = "MA Type"),
+     input(close, '', group = "Moving Average 3", inline = "MA Type")
+ )
+var ma3color = input.color(#00FFFF99, 'Style', group = "Moving Average 3", inline = "MA Style")
+var ma3style = input.string('Dashed', '', ['Dashed', 'Solid'], group = "Moving Average 3", inline = "MA Style")
+
+float ma4 = get_ma(
+     input.int(5, 'Timeframe', [1, 5], tooltip = "Choose between 1m or 5m timeframes.", group = "Moving Average 4 or VWAP"),
+     input(250, 'Type', group = "Moving Average 4 or VWAP", inline = "MA Type"),
+     input.string(defval = "VWAP", options = ["SMA", "EMA", "VWAP"], title = "", group = "Moving Average 4 or VWAP", inline = "MA Type"),
+     input(hlc3, '', group = "Moving Average 4 or VWAP", inline = "MA Type")
+ )
+var ma4color = input.color(#E040FB, 'Style', group = "Moving Average 4 or VWAP", inline = "MA Style")
+var ma4style = input.string('Dashed', '', ['Dashed', 'Solid'], group = "Moving Average 4 or VWAP", inline = "MA Style")
+
+get_ma_line_color(s, c) =>
+    s == 'Solid' or bar_index % 2 == 0 ? c : #00000000
+
 var isOneMin = timeframe.period == '1'
-
-sessionBarCount += 1
-currentCandleWithin5MinBar = (minute) % 5
-if ta.change(currentCandleWithin5MinBar) and currentCandleWithin5MinBar == 0
-    isNew5MinCandle := true
-    opening5MinBar = bar_index
-
-bgcolor = open[currentCandleWithin5MinBar] >= close ? down5MinColor : up5MinColor
-
-if isOneMin and session.ismarket //and sessionBarCount < 100
-    last5min = close[currentCandleWithin5MinBar + 1] >= open[currentCandleWithin5MinBar + 5] ? 'green' : 'red'
-    this5min = close >= open[currentCandleWithin5MinBar] ? 'green' : 'red'
-
-    if isNew5MinCandle
-        isNew5MinCandle := false
-        candle5Min := box.new(bar_index, open, bar_index + 4, close, border_width = 0)
-        two5minBarsBack = close[currentCandleWithin5MinBar + 6] >= open[currentCandleWithin5MinBar + 10] ? 'green' : 'red'
-
-        wasDoubleBarrel := two5minBarsBack != last5min and not session.isfirstbar
-        if not wasDoubleBarrel // 2 same color bars are not a double bottom
-            line.delete(doubleBottomLine)
-        else
-            sizeOfLast5MinBar = open[5] - close[1]
-            stop = open + (sizeOfLast5MinBar * .5)
-            up = last5min == 'green'
-            line.new(bar_index[3], close[1], bar_index + 4, close[1], style = doubleTopBottomCloseLineStyle, color = doubleTopBottomCloseColor, width = doubleTopBottomCloseLineWidth)
-
-        offset = last5min == 'green' ? .01 : -.01
-        y = math.max(open, close[1]) + offset
-        doubleBottomLine := line.new(bar_index[5], y, bar_index + 4, y, style = doubleTopBottomLineStyle, width = doubleTopBottomLineWidth, color = doubleTopBottomLineColor)
-    else
-        wasDoubleBarrel := false
-
-    candle5Min.set_rightbottom(bar_index + (4 - currentCandleWithin5MinBar), close)
-    candle5Min.set_bgcolor(bgcolor)
-
-c1 = ma1style == 'Solid' or bar_index % 2 == 0 ? ma1color : #00000000
-c2 = ma2style == 'Solid' or bar_index % 2 == 0 ? ma2color : #00000000
-c3 = ma3style == 'Solid' or bar_index % 2 == 0 ? ma3color : #00000000
-c4 = ma4style == 'Solid' or bar_index % 2 == 0 ? ma4color : #00000000
-
-plot(isOneMin ? ma1 : na, "MA 1", c1)
-plot(isOneMin ? ma2 : na, "MA 2", c2)
-plot(isOneMin ? ma3 : na, "MA 3", c3)
-plot(isOneMin ? ma4 : na, "MA 4 or VWAP", c4)
+plot(isOneMin ? ma1 : na, "MA 1", get_ma_line_color(ma1style, ma1color))
+plot(isOneMin ? ma2 : na, "MA 2", get_ma_line_color(ma2style, ma2color))
+plot(isOneMin ? ma3 : na, "MA 3", get_ma_line_color(ma3style, ma3color))
+plot(isOneMin ? ma4 : na, "MA 4 or VWAP", get_ma_line_color(ma4style, ma4color))
+//#endregion
